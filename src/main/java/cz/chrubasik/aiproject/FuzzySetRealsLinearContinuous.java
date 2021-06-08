@@ -2,6 +2,7 @@ package cz.chrubasik.aiproject;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -85,5 +86,37 @@ public class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 		}
 		
 	}
+	
+	public FuzzySetRealsLinearContinuous ceiling(Double ceiling) {
+		Set<FuzzyElementDouble> newElements = new HashSet<>();
+		List<FuzzyElementDouble> l = getElements();
+		for (int i = 0; i < l.size(); i++) {
+			
+		}
+	}
+	
+	private FuzzyValue mu_c(Double x, Double y, Double c, FuzzyValue mu_x, FuzzyValue mu_y) {
+		if (mu_y.compareTo(mu_x) < 0) {
+			Double memDegreeValue = ((c - x) / (y - x)) * (mu_y.getValue() - mu_x.getValue()) + mu_x.getValue();
+			return FuzzyValue.of(memDegreeValue);
+			
+		}
+		if (mu_y.compareTo(mu_x) > 0) {
+			
+		}
+		if (c.equals(x)) {
+			return mu_x;
+		}
+		if (c.equals(y)) {
+			return mu_y;
+		}
+		if (mu_y.equals(mu_x)) {
+			return mu_y; // x works too, horizontal line	
+		}
+		else {
+			throw new RuntimeException("Unhandled case in membership funcion");
+		}
+	}
+	
 
 }
