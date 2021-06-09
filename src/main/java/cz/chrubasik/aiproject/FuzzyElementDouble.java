@@ -18,7 +18,7 @@ public final class FuzzyElementDouble implements FuzzyElement<Double> {
 	FuzzyValue membershipDegree;
 	
 	public FuzzyElementDouble(Double element, Double membershipDegreeValue) {
-		this.element = element;
+		this.element = Double.valueOf(Math.round(element * 10000D)/10000D);
 		this.membershipDegree = FuzzyValue.of(membershipDegreeValue);
 	}
 

@@ -12,14 +12,17 @@ public final class FuzzyValue {
 	static Double NO_VALUE = Double.NEGATIVE_INFINITY;
 	static FuzzyValue FV_0 = new FuzzyValue(0D);
 	static FuzzyValue FV_1 = new FuzzyValue(1D);
+	static FuzzyValue FV_NONE = new FuzzyValue(null);
 	
 	private FuzzyValue(Double value) {
-		if (value < 0D && value != NO_VALUE) {
+		if (value == null) {
+			this.value = value;
+		} else if (value < 0D && value != NO_VALUE) {
 			this.value = 0D;
 		} else if (value > 1D) {
 			this.value = 1D;
 		} else {
-			this.value = value;
+			this.value = Double.valueOf(Math.round(value * 10000D)/10000D);
 		}
 	}
 	
