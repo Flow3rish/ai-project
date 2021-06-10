@@ -1,11 +1,10 @@
 /**
  * 
  */
-package cz.chrubasik.aiproject;
+package cz.chrubasik.aiproject.fuzzysets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**

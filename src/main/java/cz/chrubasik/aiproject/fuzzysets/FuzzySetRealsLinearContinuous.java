@@ -1,4 +1,4 @@
-package cz.chrubasik.aiproject;
+package cz.chrubasik.aiproject.fuzzysets;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -7,69 +7,88 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value
-public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
+@EqualsAndHashCode
+public final class FuzzySetRealsLinearContinuous implements FuzzySet<FuzzyElementDouble> {
 	
 	Set<FuzzyElementDouble> elements;
 	FuzzySetType fuzzySetType;
 	
-	static enum FuzzySetType {
+	public static enum FuzzySetType {
 		ONE_ELEMENT,
 		TRAPEZOIDAL,
 		TRIANGULAR,
 		GENERAL,
-		EMPTY
+		EMPTY,
+		REAL_NUMBER,
+		FUZZY_NUMBER_TRIANGULAR,
+		FUZZY_NUMBER_TRAPEZOIDAL
 	}
 	
+	
 	public FuzzySetRealsLinearContinuous(Set<FuzzyElementDouble> elements) {
+		// TODO CASES must be handled differently
 		this.elements = elements;
-		switch (this.elements.size()) {
+		FuzzySetType f = null;
+		List<FuzzyElementDouble> l = this.getElements();
+		switch (l.size()) {
 		case 0:
 			this.fuzzySetType = FuzzySetType.EMPTY;
 			break;
 		case 1:
-			this.fuzzySetType = FuzzySetType.ONE_ELEMENT;
+			if (l.get(0).getMembershipDegree().equals(FuzzyValue.FV_1)) {
+				this.fuzzySetType = FuzzySetType.REAL_NUMBER;
+			} else {
+				this.fuzzySetType = FuzzySetType.ONE_ELEMENT;
+			}
 			break;
 		case 3:
-			this.fuzzySetType = FuzzySetType.TRIANGULAR;
+			f = null;
+			if (l.get(0).getMembershipDegree().equals(FuzzyValue.FV_0)
+					&&
+				l.get(2).getMembershipDegree().equals(FuzzyValue.FV_0)) {
+				f = FuzzySetType.TRIANGULAR;
+				if (l.get(1).getMembershipDegree().equals(FuzzyValue.FV_1)) {
+					f = FuzzySetType.FUZZY_NUMBER_TRIANGULAR;
+				}
+			} else {
+				f = FuzzySetType.GENERAL;
+			}
+			this.fuzzySetType = f;
 			break;
 		case 4:
-			this.fuzzySetType = FuzzySetType.TRAPEZOIDAL;
+			f = null;
+			if (!(l.get(1).getMembershipDegree().compareTo(l.get(2).getMembershipDegree()) == 0)) {
+				f = FuzzySetType.GENERAL;
+			} else if (
+					l.get(0).getMembershipDegree().equals(FuzzyValue.FV_0) 
+					&&
+					l.get(3).getMembershipDegree().equals(FuzzyValue.FV_0)) {
+				f = FuzzySetType.TRAPEZOIDAL;
+				if (l.get(1).getMembershipDegree().equals(FuzzyValue.FV_1)) {
+					f = FuzzySetType.FUZZY_NUMBER_TRAPEZOIDAL;
+				}
+			} else {
+				f = FuzzySetType.GENERAL;
+			}
+			this.fuzzySetType = f;
 			break;
 		default:
 			this.fuzzySetType = FuzzySetType.GENERAL;
 			break;
 		}
+		
 	}
-	
+
+	@Override
 	public List<FuzzyElementDouble> getElements() {
 		return new ArrayList<>(elements).stream().sorted(Comparator.comparing(FuzzyElementDouble::getElement)).collect(Collectors.toList());
 	}
 	
 
-	@Override
-	public FuzzyValue getMembershipDegreeOfElement(Double c) {
-		List<FuzzyElementDouble> l = getElements();
-		FuzzyElementDouble x = null;
-		FuzzyElementDouble y = null;
-		if (l.get(0).getElement().compareTo(c) > 0 || l.get(l.size() - 1).getElement().compareTo(c) < 0) {
-			// not in defined intervals
-			return FuzzyValue.FV_0;
-		}
-		for (int i = 0; i < l.size(); i++) {
-			if (l.get(i).getElement().compareTo(c) <= 0 && l.get(i + 1).getElement().compareTo(c) >= 0) {
-				x = l.get(i);
-				y = l.get(i + 1);
-				break;
-			}
-		}
-	
-		return mu_c(x.getElement(), y.getElement(), c, x.getMembershipDegree(), y.getMembershipDegree());
-		
-	}
-	
 	private void ceiledAddToSet(Set<FuzzyElementDouble> set, FuzzyElementDouble el, FuzzyValue ceiling) {
 		if (el.getMembershipDegree().compareTo(ceiling) <= 0) {
 			set.add(el);
@@ -77,7 +96,7 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 	}
 	
 	
-	private FuzzyValue mu_c(Double x, Double y, Double c, FuzzyValue mu_x, FuzzyValue mu_y) {
+	private FuzzyValue mu_c_interval(Double x, Double y, Double c, FuzzyValue mu_x, FuzzyValue mu_y) {
 		if (mu_y.compareTo(mu_x) < 0 || mu_y.compareTo(mu_x) > 0) {
 			//Double memDegreeValue = ((y - c) / (y - x)) * (mu_x.getValue() - mu_y.getValue()) + mu_y.getValue(); // equivalent
 			Double memDegreeValue = ((c - x) / (y - x)) * (mu_y.getValue() - mu_x.getValue()) + mu_x.getValue();
@@ -128,11 +147,24 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 		}
 		
 	}
-	
-	public FuzzyValue muCOnWholeSet(Double c) {
+
+	/**
+	 * membership value for any element in reals
+	 */
+	public FuzzyValue mu_c(Double c) {
 		List<FuzzyElementDouble> l = getElements();
 		FuzzyElementDouble x = null;
 		FuzzyElementDouble y = null;
+		if (l.size() == 0) {
+			return FuzzyValue.FV_0;
+		}
+		if (l.size() == 1) { //
+			if (c.equals(l.get(0).getElement())) {
+				return l.get(0).getMembershipDegree();
+			} else {
+				return FuzzyValue.FV_0;
+			}
+		}
 		if(c.compareTo(l.get(0).getElement()) < 0 || c.compareTo(l.get(l.size() - 1).getElement()) > 0) { // outside of defined interval
 			return FuzzyValue.FV_0;
 		}
@@ -140,10 +172,10 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 			if(c.compareTo(l.get(i).getElement()) >= 0 && c.compareTo(l.get(i + 1).getElement()) <= 0) {
 				x = l.get(i);
 				y = l.get(i + 1);
-				return mu_c(x.getElement(), y.getElement(), c, x.getMembershipDegree(), y.getMembershipDegree());
+				return mu_c_interval(x.getElement(), y.getElement(), c, x.getMembershipDegree(), y.getMembershipDegree());
 			}
 		}
-		throw new RuntimeException("Unhandled case in muWholeset");
+		throw new RuntimeException("Unhandled case in mu_c");
 	}
 	
 	public static FuzzyElementDouble _twoLineIntersection(FuzzyElementDouble e1, FuzzyElementDouble e2, FuzzyElementDouble f1, FuzzyElementDouble f2) {
@@ -165,7 +197,7 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 		
 	}
 	
-	public FuzzySetRealsLinearContinuous ceilSet(FuzzyValue ceiling) {
+	public FuzzySetRealsLinearContinuous ceil(FuzzyValue ceiling) {
 		List<FuzzyElementDouble> l = getElements();
 		Set<FuzzyElementDouble> elements = new HashSet<>();
 		FuzzyElementDouble e1 = null;
@@ -195,18 +227,41 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 			throw new RuntimeException("Invalid operation");
 		}
 	}
-	
-	public FuzzySetRealsLinearContinuous union(FuzzySetRealsLinearContinuous other) {
-		return setOperaion(other, "union");
+
+	@Override
+	public FuzzySet<FuzzyElementDouble> union(FuzzySet<FuzzyElementDouble> other) {
+		other = (FuzzySetRealsLinearContinuous) other;
+		if (other.size() == 0) {
+			return this;
+		}
+		if (this.size() == 0) {
+			return other;
+		}
+		if (this.size() == 0 && other.size() == 0) {
+			return (FuzzySet<FuzzyElementDouble>) new FuzzySetRealsLinearContinuous(new HashSet<>());
+		}
+		return (FuzzySet<FuzzyElementDouble>) fuzzySetOperaion(other, "union");
 	}
 	
-	public FuzzySetRealsLinearContinuous intersection(FuzzySetRealsLinearContinuous other) {
-		return setOperaion(other, "intersection");
+	@Override
+	public FuzzySet<FuzzyElementDouble> intersection(FuzzySet<FuzzyElementDouble> other) {
+		other = (FuzzySetRealsLinearContinuous) other;
+		if (other.size() == 0) {
+			return (FuzzySet<FuzzyElementDouble>) new FuzzySetRealsLinearContinuous(new HashSet<>());
+		}
+		if (this.size() == 0) {
+			return (FuzzySet<FuzzyElementDouble>) new FuzzySetRealsLinearContinuous(new HashSet<>());
+		}
+		if (this.size() == 0 && other.size() == 0) {
+			return (FuzzySet<FuzzyElementDouble>) new FuzzySetRealsLinearContinuous(new HashSet<>());
+		}
+		return (FuzzySet<FuzzyElementDouble>) fuzzySetOperaion(other, "intersection");
 	}
 	
 	
 	
-	private FuzzySetRealsLinearContinuous setOperaion(FuzzySetRealsLinearContinuous other, String operation) {
+	private FuzzySetRealsLinearContinuous fuzzySetOperaion(FuzzySet<FuzzyElementDouble> o, String operation) {
+		FuzzySetRealsLinearContinuous other = (FuzzySetRealsLinearContinuous) o;
 		List<FuzzyElementDouble> lThis = getElements();
 		List<FuzzyElementDouble> lOther = other.getElements();
 		Set<FuzzyElementDouble> elements = new HashSet<>();
@@ -214,13 +269,13 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 		
 		// add larger points of the two sets (two for loops)
 		for (int i = 0; i < lThis.size(); i++) {
-			muC = other.muCOnWholeSet(lThis.get(i).getElement());
+			muC = other.mu_c(lThis.get(i).getElement());
 			if (_setOperationSwitch(lThis.get(i).getMembershipDegree().compareTo(muC), operation)) { // if the element is above or equal to the membership for second
 				elements.add(new FuzzyElementDouble(lThis.get(i).getElement(), lThis.get(i).getMembershipDegree().getValue()));
 			}
 		}
 		for (int i = 0; i < lOther.size(); i++) {
-			muC = this.muCOnWholeSet(lOther.get(i).getElement());
+			muC = this.mu_c(lOther.get(i).getElement());
 			if (_setOperationSwitch(lOther.get(i).getMembershipDegree().compareTo(muC), operation)) {
 				elements.add(new FuzzyElementDouble(lOther.get(i).getElement(), lOther.get(i).getMembershipDegree().getValue()));
 			}
@@ -245,18 +300,73 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<Double> {
 		
 	}
 	
+	@Override
 	public FuzzySetRealsLinearContinuous complement() {
 		return new FuzzySetRealsLinearContinuous(this.getElements().stream().map(el -> new FuzzyElementDouble(el.getElement(), 1 - el.getMembershipDegree().getValue())).collect(Collectors.toSet()));
 	}
 	
-	
+
+	@Override
 	public int size() {
 		return elements.size();
 	}
 	
 	public String toString() {
-		return "FuzzySet(\n" + getElements().stream().map(el -> el.toString() + "\n").collect(Collectors.toList()) + ")";
+		return "FuzzySet(\n" + getElements().stream().map(el -> el.toString() + "\n").collect(Collectors.toList()) + ")\n" + fuzzySetType;
 	}
 	
+	
+	public static FuzzySetRealsLinearContinuous ofRegularTriangularFuzzyNumber(Double left, Double core, Double right) {
+		return new FuzzySetRealsLinearContinuous(List.of(
+					new FuzzyElementDouble(left, 0D),
+					new FuzzyElementDouble(core, 1D),
+					new FuzzyElementDouble(right, 0D)
+				).stream().collect(Collectors.toSet()));
+	}
+	public static FuzzySetRealsLinearContinuous ofSymmetricTriangularFuzzyNumber(Double core, Double delta) {
+		return new FuzzySetRealsLinearContinuous(List.of(
+					new FuzzyElementDouble(core - delta, 0D),
+					new FuzzyElementDouble(core, 1D),
+					new FuzzyElementDouble(core + delta, 0D)
+				).stream().collect(Collectors.toSet()));
+		
+	}
+	public static FuzzySetRealsLinearContinuous ofRegularTrapezoidalFuzzyNumber(Double left, Double core1, Double core2, Double right) {
+		return new FuzzySetRealsLinearContinuous(List.of(
+					new FuzzyElementDouble(left, 0D),
+					new FuzzyElementDouble(core1, 1D),
+					new FuzzyElementDouble(core2, 1D),
+					new FuzzyElementDouble(right, 0D)
+				).stream().collect(Collectors.toSet()));
+		
+	}
+	public static FuzzySetRealsLinearContinuous ofSymmetricTrapezoidalFuzzyNumber(Double core1, Double core2, Double delta) {
+		return new FuzzySetRealsLinearContinuous(List.of(
+					new FuzzyElementDouble(core1 - delta, 0D),
+					new FuzzyElementDouble(core1, 1D),
+					new FuzzyElementDouble(core2, 1D),
+					new FuzzyElementDouble(core2 + delta, 0D)
+				).stream().collect(Collectors.toSet()));
+	}
+	
+	public static FuzzySetRealsLinearContinuous ofLeftCorner(Double left, Double center, Double right) {
+		return new FuzzySetRealsLinearContinuous(List.of(
+					new FuzzyElementDouble(left, 1D),
+					new FuzzyElementDouble(center, 1D),
+					new FuzzyElementDouble(right, 0D)
+				).stream().collect(Collectors.toSet()));
+	}
+	
+	public static FuzzySetRealsLinearContinuous ofRightCorner(Double left, Double center, Double right) {
+		return new FuzzySetRealsLinearContinuous(List.of(
+					new FuzzyElementDouble(left, 0D),
+					new FuzzyElementDouble(center, 1D),
+					new FuzzyElementDouble(right, 1D)
+				).stream().collect(Collectors.toSet()));
+	}
+	
+	
+	
+
 
 }

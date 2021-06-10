@@ -1,7 +1,14 @@
-package cz.chrubasik.aiproject;
+package cz.chrubasik.aiproject.fuzzysets;
+
+import java.util.List;
 
 public interface FuzzySet<E> {
 	
-	public FuzzyValue getMembershipDegreeOfElement(E x);
+	FuzzySet<E> intersection(FuzzySet<E> other);
+	FuzzySet<E> union(FuzzySet<E> other);
+	FuzzySet<E> complement();
+	FuzzySet<E> ceil(FuzzyValue fuzzyValue);
+	List<E> getElements();
+	int size();
 
 }

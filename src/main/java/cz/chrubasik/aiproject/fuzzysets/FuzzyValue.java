@@ -1,4 +1,4 @@
-package cz.chrubasik.aiproject;
+package cz.chrubasik.aiproject.fuzzysets;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -9,10 +9,10 @@ public final class FuzzyValue {
 
 
 	private Double value;
-	static Double NO_VALUE = Double.NEGATIVE_INFINITY;
-	static FuzzyValue FV_0 = new FuzzyValue(0D);
-	static FuzzyValue FV_1 = new FuzzyValue(1D);
-	static FuzzyValue FV_NONE = new FuzzyValue(null);
+	public static Double NO_VALUE = Double.NEGATIVE_INFINITY;
+	public static FuzzyValue FV_0 = new FuzzyValue(0D);
+	public static FuzzyValue FV_1 = new FuzzyValue(1D);
+	public static FuzzyValue FV_NONE = new FuzzyValue(null);
 	
 	private FuzzyValue(Double value) {
 		if (value == null) {

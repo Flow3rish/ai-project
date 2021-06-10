@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cz.chrubasik.aiproject;
+package cz.chrubasik.aiproject.fuzzysets;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;

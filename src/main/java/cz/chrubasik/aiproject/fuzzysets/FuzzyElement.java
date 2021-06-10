@@ -1,4 +1,4 @@
-package cz.chrubasik.aiproject;
+package cz.chrubasik.aiproject.fuzzysets;
 
 public interface FuzzyElement<T> {
 	T getElement();

@@ -1,42 +1,23 @@
-package cz.chrubasik.aiproject;
+package cz.chrubasik.aiproject.fuzzysets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import static cz.chrubasik.aiproject.fuzzysets.FuzzySetRealsLinearContinuous.FuzzySetType;
+
 
 
 class FuzzySetRealsLinearContinuousTest {
 
-	@Test
-	void testGetMembershipDegreeOfElement() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
-				new FuzzyElementDouble(1D, 0.5D),
-				new FuzzyElementDouble(2D, 0.7D),
-				new FuzzyElementDouble(3D, 0.9D),
-				new FuzzyElementDouble(5D, 0.5D)
-				).stream().collect(Collectors.toSet()));
-	
-		assertEquals(FuzzySetRealsLinearContinuous.FuzzySetType.TRAPEZOIDAL, fuzzySet.getFuzzySetType());
-		assertEquals(FuzzyValue.of(0D), fuzzySet.getMembershipDegreeOfElement(-3D));
-		assertEquals(FuzzyValue.of(0.5D), fuzzySet.getMembershipDegreeOfElement(1D));
-		assertEquals(FuzzyValue.of(0.7D), fuzzySet.getMembershipDegreeOfElement(2D));
-		assertEquals(FuzzyValue.of(0.9D), fuzzySet.getMembershipDegreeOfElement(3D));
-		assertEquals(FuzzyValue.of(0.5D), fuzzySet.getMembershipDegreeOfElement(5D));
-		assertEquals(FuzzyValue.of(0D), fuzzySet.getMembershipDegreeOfElement(100D));
-		
-		assertTrue(fuzzySet.getMembershipDegreeOfElement(1.1D).compareTo(fuzzySet.getMembershipDegreeOfElement(1.2D)) < 0);
-		assertTrue(fuzzySet.getMembershipDegreeOfElement(3.3D).compareTo(fuzzySet.getMembershipDegreeOfElement(5D)) > 0);
-		
-		
-	}
 	
 	@Test
 	void testOrderingInGetElements() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
@@ -56,9 +37,9 @@ class FuzzySetRealsLinearContinuousTest {
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
-		fuzzySet.getElements().forEach(el -> assertEquals(fuzzySet.muCOnWholeSet(el.getElement()), el.getMembershipDegree()));
-		assertEquals(fuzzySet.muCOnWholeSet(1.5D), FuzzyValue.of(0.6D));
-		assertEquals(fuzzySet.muCOnWholeSet(4.5D), FuzzyValue.of(0.6D));
+		fuzzySet.getElements().forEach(el -> assertEquals(fuzzySet.mu_c(el.getElement()), el.getMembershipDegree()));
+		assertEquals(fuzzySet.mu_c(1.5D), FuzzyValue.of(0.6D));
+		assertEquals(fuzzySet.mu_c(4.5D), FuzzyValue.of(0.6D));
 	}
 	
 	@Test
@@ -117,158 +98,191 @@ class FuzzySetRealsLinearContinuousTest {
 	
 	@Test
 	void testCeil_WhenPureIntersect() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous ceiledSet = fuzzySet.ceilSet(FuzzyValue.of(0.6D));
+		FuzzySet<FuzzyElementDouble> ceiledSet = fuzzySet.ceil(FuzzyValue.of(0.6D));
 		assertEquals(1.5D, ceiledSet.getElements().get(1).getElement());
 	}
 	
 	@Test
 	void testCeil_WhenBelowAll() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous ceiledSet = fuzzySet.ceilSet(FuzzyValue.of(0.4));
+		FuzzySet<FuzzyElementDouble> ceiledSet = fuzzySet.ceil(FuzzyValue.of(0.4));
 		assertEquals(0, ceiledSet.getElements().size());
 	}
 	
 	@Test
 	void testCeil_WhenAboveAll() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous ceiledSet = fuzzySet.ceilSet(FuzzyValue.of(1D));
+		FuzzySet<FuzzyElementDouble> ceiledSet = fuzzySet.ceil(FuzzyValue.of(1D));
 		assertEquals(fuzzySet.size(), ceiledSet.size());
 	}
 	
 	@Test
 	void testCeil_WhenTouchingPeak() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous ceiledSet = fuzzySet.ceilSet(FuzzyValue.of(0.9D));
+		FuzzySet<FuzzyElementDouble> ceiledSet = fuzzySet.ceil(FuzzyValue.of(0.9D));
 		assertEquals(fuzzySet.size(), ceiledSet.size());
 	}
 	
 	@Test
 	void testCeil_WhenIntersectingAPoint() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous ceiledSet = fuzzySet.ceilSet(FuzzyValue.of(0.5D));
+		FuzzySet<FuzzyElementDouble> ceiledSet = fuzzySet.ceil(FuzzyValue.of(0.5D));
 		assertEquals(2, ceiledSet.size());
-		ceiledSet = fuzzySet.ceilSet(FuzzyValue.of(0.8D));
+		ceiledSet = fuzzySet.ceil(FuzzyValue.of(0.8D));
 		assertEquals(FuzzyValue.of(0.8D), ceiledSet.getElements().get(2).getMembershipDegree());
 	}
 	
 	
 	@Test void testUnitonOneIntersection() {
-		FuzzySetRealsLinearContinuous fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
-		FuzzySetRealsLinearContinuous fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.8D),
 				new FuzzyElementDouble(3D, 0.8D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous unitedSet = fuzzySet1.union(fuzzySet2);
+		FuzzySet<FuzzyElementDouble> unitedSet = fuzzySet1.union(fuzzySet2);
 		assertEquals(5, unitedSet.size());
 	}
 	
 	@Test void testUnitonSameSets() {
-		FuzzySetRealsLinearContinuous fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
-		FuzzySetRealsLinearContinuous fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous unitedSet = fuzzySet1.union(fuzzySet2);
+		FuzzySet<FuzzyElementDouble> unitedSet = fuzzySet1.union(fuzzySet2);
 		assertEquals(fuzzySet1, unitedSet);
 		assertEquals(fuzzySet2, unitedSet);
 	}
 	
 	@Test void testUnitonNoLineIntersect() {
-		FuzzySetRealsLinearContinuous fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
-		FuzzySetRealsLinearContinuous fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.4D),
 				new FuzzyElementDouble(2D, 0.6D),
 				new FuzzyElementDouble(3D, 0.8D),
 				new FuzzyElementDouble(5D, 0.4D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous unitedSet = fuzzySet1.union(fuzzySet2);
+		FuzzySet<FuzzyElementDouble> unitedSet = fuzzySet1.union(fuzzySet2);
 		assertEquals(fuzzySet1, unitedSet);
+	}
+	
+	@Test void testUnitonWithEmptySet() {
+		FuzzySet<FuzzyElementDouble> fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
+				new FuzzyElementDouble(1D, 0.5D),
+				new FuzzyElementDouble(2D, 0.7D),
+				new FuzzyElementDouble(3D, 0.9D),
+				new FuzzyElementDouble(5D, 0.5D)
+				).stream().collect(Collectors.toSet()));
+		FuzzySet<FuzzyElementDouble> fuzzySet2 = new FuzzySetRealsLinearContinuous(new HashSet<>());
+		
+		FuzzySet<FuzzyElementDouble> unitedSet = fuzzySet1.union(fuzzySet2);
+		assertEquals(fuzzySet1.size(), unitedSet.size());
 	}
 	
 	
 	@Test
 	void testIntersection() {
-		FuzzySetRealsLinearContinuous fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
-		FuzzySetRealsLinearContinuous fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet2 = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.4D),
 				new FuzzyElementDouble(2D, 0.6D),
 				new FuzzyElementDouble(3D, 0.8D),
 				new FuzzyElementDouble(5D, 0.4D)
 				).stream().collect(Collectors.toSet()));
 		
-		FuzzySetRealsLinearContinuous unitedSet = fuzzySet1.intersection(fuzzySet2);
+		FuzzySet<FuzzyElementDouble> unitedSet = fuzzySet1.intersection(fuzzySet2);
 		assertEquals(fuzzySet2, unitedSet);
 	}
 	
 	@Test
 	void testComplement() {
-		FuzzySetRealsLinearContinuous fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+		FuzzySet<FuzzyElementDouble> fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
 				new FuzzyElementDouble(1D, 0.5D),
 				new FuzzyElementDouble(2D, 0.7D),
 				new FuzzyElementDouble(3D, 0.9D),
 				new FuzzyElementDouble(5D, 0.5D)
 				).stream().collect(Collectors.toSet()));
-		FuzzySetRealsLinearContinuous fuzzySetComplement = fuzzySet.complement();
+		FuzzySet<FuzzyElementDouble> fuzzySetComplement = fuzzySet.complement();
 		assertEquals(FuzzyValue.of(0.3), fuzzySetComplement.getElements().get(1).getMembershipDegree());
 		
+	}
+	
+	
+	@Test
+	void testCreateFuzzyNumbers() {
+		FuzzySetRealsLinearContinuous fuzzySet = FuzzySetRealsLinearContinuous.ofSymmetricTriangularFuzzyNumber(5D, 0.5D);
+		assertEquals(FuzzySetType.FUZZY_NUMBER_TRIANGULAR, fuzzySet.getFuzzySetType());
+		fuzzySet = FuzzySetRealsLinearContinuous.ofRegularTriangularFuzzyNumber(4D, 4.5D, 7D);
+		assertEquals(FuzzySetType.FUZZY_NUMBER_TRIANGULAR, fuzzySet.getFuzzySetType());
+		fuzzySet = FuzzySetRealsLinearContinuous.ofSymmetricTrapezoidalFuzzyNumber(10D, 12D, 4D);
+		assertEquals(FuzzySetType.FUZZY_NUMBER_TRAPEZOIDAL, fuzzySet.getFuzzySetType());
+		fuzzySet = FuzzySetRealsLinearContinuous.ofRegularTrapezoidalFuzzyNumber(15D, 15.3D, 16D, 20D);
+		assertEquals(FuzzySetType.FUZZY_NUMBER_TRAPEZOIDAL, fuzzySet.getFuzzySetType());
+		
+		fuzzySet = new FuzzySetRealsLinearContinuous(List.of(
+				new FuzzyElementDouble(1D, 0.5D),
+				new FuzzyElementDouble(2D, 1D),
+				new FuzzyElementDouble(5D, 0.5D)
+				).stream().collect(Collectors.toSet()));
+		assertEquals(FuzzySetType.GENERAL, fuzzySet.getFuzzySetType());
 	}
 
 
