@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import cz.chrubasik.aiproject.fuzzylogic.Rule.OperatorType;
+import cz.chrubasik.aiproject.fuzzysets.FuzzyElementDouble;
 import cz.chrubasik.aiproject.fuzzysets.FuzzySetRealsLinearContinuous;
 import cz.chrubasik.aiproject.fuzzysets.FuzzyValue;
 import lombok.AllArgsConstructor;
@@ -21,9 +22,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MamdaniInferenceMechanism {
-	HashMap<String, FuzzyLinguisticVariable> fuzzyLinguisticVariables = new HashMap<>();
-	Set<Rule> rules = new HashSet<>();
-	HashMap<String, Double> measurements = new HashMap<>();
+	private HashMap<String, FuzzyLinguisticVariable> fuzzyLinguisticVariables = new HashMap<>();
+	private Set<Rule> rules = new HashSet<>();
+	private HashMap<String, Double> measurements = new HashMap<>();
+	private HashMap<String, FuzzySetRealsLinearContinuous> inferedFuzzySets = null;
+	private HashMap<String, FuzzyElementDouble> defuzzifiedElements; // fuzzy value can be omitted
 	
 	public void addMeasurement(String lingVarName, Double measurement) {
 		measurements.put(lingVarName, measurement);
@@ -76,8 +79,28 @@ public class MamdaniInferenceMechanism {
 			FuzzySetRealsLinearContinuous fuzzySetTemp = outputSets.get(key).stream().reduce(new FuzzySetRealsLinearContinuous(new HashSet<>()), (a, b) -> (FuzzySetRealsLinearContinuous) a.union(b));
 			inferedFuzzySets.put(key, fuzzySetTemp);
 		});
+		this.inferedFuzzySets = inferedFuzzySets;
 		return inferedFuzzySets;
-		
+	}
+	
+	public HashMap<String, FuzzyElementDouble> defuzzifyCOA() {
+		if (inferedFuzzySets == null) {
+			throw new RuntimeException("runInference was not executed.");
+		}
+		defuzzifiedElements = new HashMap<>();
+		Double u_numerator = 0D;
+		Double u_denominator = 0D;
+		for (String key : inferedFuzzySets.keySet()) {
+			FuzzySetRealsLinearContinuous set = inferedFuzzySets.get(key);
+			List<FuzzyElementDouble> l = set.getElements();
+			for (FuzzyElementDouble el : l) {
+				u_numerator += el.getElement() * el.getMembershipDegree().getValue();
+				u_denominator += el.getMembershipDegree().getValue();
+			}
+			FuzzyElementDouble fuzzyElementDouble = new FuzzyElementDouble(u_numerator/u_denominator, 0D);
+			defuzzifiedElements.put(key, new FuzzyElementDouble(u_numerator/u_denominator, set.mu_c(fuzzyElementDouble.getElement()).getValue())); // FIXME someday, move rounding
+		}
+		return defuzzifiedElements;
 		
 	}
 	

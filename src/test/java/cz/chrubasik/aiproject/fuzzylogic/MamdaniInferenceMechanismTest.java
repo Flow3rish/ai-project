@@ -63,10 +63,11 @@ class MamdaniInferenceMechanismTest {
 		
 	
 		HashMap<String, Double> measurements = new HashMap<>();
-		measurements.put("teplota_vody", 85D);
+		measurements.put("teplota_vody", 20D);
 		mamdaniInferenceMechanism.setMeasurements(measurements);
 
 		System.out.println(mamdaniInferenceMechanism.runInference().get("spokojenost_zakaznika"));
+		System.out.println(mamdaniInferenceMechanism.defuzzifyCOA().get("spokojenost_zakaznika"));
 		
 		
 		
