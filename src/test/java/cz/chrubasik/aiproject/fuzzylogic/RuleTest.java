@@ -11,7 +11,8 @@ class RuleTest {
 	@Test
 	void test() {
 		Rule rule = Rule.builder()
-		.antecedent("teplota_vody is studena_voda", "teplota_vody is ledova_voda")
+		.antecedent("teplota_vody is studena_voda")
+		.antecedent("teplota_vody is ledova_voda")
 		.operatorType(OperatorType.OR)
 		.consequent("zakaznik is nespokojeny")
 		.build();

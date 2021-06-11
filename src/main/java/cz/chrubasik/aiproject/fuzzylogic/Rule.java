@@ -1,18 +1,15 @@
 package cz.chrubasik.aiproject.fuzzylogic;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Value;
 
 @Value
 public class Rule {
 	
-	private Set<Statement> antecedent;
+	private Set<Statement> antecedents;
 	private OperatorType operatorType;
 	private Statement consequent;
 	
@@ -25,18 +22,20 @@ public class Rule {
 	@NoArgsConstructor
 	public static class RuleBuilder {
 		
-		private Set<Statement> antecedent;
+		private Set<Statement> antecedents;
 		private OperatorType operatorType;
 		private Statement consequent;
 		
 
 		public Rule build() {
-			return new Rule(this.antecedent, this.operatorType, this.consequent);
+			return new Rule(this.antecedents, this.operatorType, this.consequent);
 		}
 		
-		public RuleBuilder antecedent(String ...statements) {
-			Set<String> strings = new HashSet<>(Arrays.asList(statements));
-			this.antecedent = strings.stream().map(el -> new Statement(el)).collect(Collectors.toSet());
+		public RuleBuilder antecedent(String statement) {
+			if (this.antecedents == null) {
+				this.antecedents = new HashSet<>();
+			}
+			this.antecedents.add(new Statement(statement));
 			return this;
 			
 		}
