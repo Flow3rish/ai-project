@@ -163,6 +163,14 @@ class FuzzySetRealsLinearContinuousTest {
 		assertEquals(FuzzyValue.of(0.8D), ceiledSet.getElements().get(2).getMembershipDegree());
 	}
 	
+	@Test
+	void testCeil_WhenIntersectTwoElements() {
+		FuzzySet<FuzzyElementDouble> fuzzySet = FuzzySetRealsLinearContinuous.ofRightCorner(5D, 8D, 10D);
+		FuzzySet<FuzzyElementDouble> ceiledSet = fuzzySet.ceil(FuzzyValue.of(0.5D));
+		assertEquals(2, ceiledSet.size());
+		
+	}
+	
 	
 	@Test void testUnitonOneIntersection() {
 		FuzzySet<FuzzyElementDouble> fuzzySet1 = new FuzzySetRealsLinearContinuous(List.of(
