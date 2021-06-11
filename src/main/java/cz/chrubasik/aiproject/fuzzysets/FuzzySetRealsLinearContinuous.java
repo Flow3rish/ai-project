@@ -372,6 +372,23 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<FuzzyElemen
 	}
 	
 	
+	public Double centerOfArea() {
+		List<FuzzyElementDouble> l = getElements();
+		Double xA_sum = 0D;
+		Double A_sum = 0D;
+		for (int i = 0; i < l.size() - 1; i++) {
+			FuzzyElementDouble el_x = l.get(i);
+			FuzzyElementDouble el_y = l.get(i + 1);
+			Double A = (el_y.getElement() - el_x.getElement()) * el_y.getMembershipDegree().getValue() + (el_x.getMembershipDegree().getValue() - el_y.getMembershipDegree().getValue()) * 0.5D * (el_y.getElement() - el_x.getElement());
+			Double x_center = el_x.getElement() + (el_y.getElement() - el_x.getElement()) * 0.5D;
+			xA_sum += x_center*A;
+			A_sum += A;
+		}
+		return Math.round((xA_sum/A_sum)*10000D)/10000D;
+		
+	}
+	
+	
 	
 
 

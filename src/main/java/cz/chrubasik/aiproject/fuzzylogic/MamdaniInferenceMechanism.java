@@ -11,12 +11,10 @@ import cz.chrubasik.aiproject.fuzzysets.FuzzyElementDouble;
 import cz.chrubasik.aiproject.fuzzysets.FuzzySetRealsLinearContinuous;
 import cz.chrubasik.aiproject.fuzzysets.FuzzyValue;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Builder
 @Getter
 @Setter
 @NoArgsConstructor
@@ -48,9 +46,14 @@ public class MamdaniInferenceMechanism {
 	 * evaluate one rule -> one step in the inference mechanism
 	 */
 	private FuzzySetRealsLinearContinuous evaluateRule(Rule rule, HashMap<String, Double> measurements) {
-		List<FuzzyValue> antecedents = rule.getAntecedent().stream().map(el -> {
+		List<FuzzyValue> antecedents = rule.getAntecedents().stream().map(el -> {
 			FuzzyLinguisticVariable flv = fuzzyLinguisticVariables.get(el.getSubject());
-			return flv.evaluateMeasurementOnFuzzySet(measurements.get(el.getSubject()), el.getPredicate());
+			Double measurement = measurements.get(el.getSubject());
+			if (measurement == null) {
+				return FuzzyValue.FV_0;
+			} else {
+				return flv.evaluateMeasurementOnFuzzySet(measurement, el.getPredicate());
+			}
 		}
 			).collect(Collectors.toList());
 		FuzzyValue antecedentValue = rule.getOperatorType().equals(OperatorType.OR) ? 
@@ -77,15 +80,15 @@ public class MamdaniInferenceMechanism {
 			}
 		});
 		
-		HashMap<String, FuzzySetRealsLinearContinuous> inferedFuzzySets = new HashMap<>();
+		HashMap<String, FuzzySetRealsLinearContinuous> inferFuzzSets = new HashMap<>();
 		outputSets.keySet().forEach(key -> {
 			FuzzySetRealsLinearContinuous fuzzySetTemp = outputSets.get(key).stream().reduce(new FuzzySetRealsLinearContinuous(new HashSet<>()), (a, b) -> (FuzzySetRealsLinearContinuous) a.union(b));
 			if (!fuzzySetTemp.hasOnlyZeroMemberships()) {
-				inferedFuzzySets.put(key, fuzzySetTemp);
+				inferFuzzSets.put(key, fuzzySetTemp);
 			}
 		});
-		this.inferedFuzzySets = inferedFuzzySets;
-		return inferedFuzzySets;
+		this.inferedFuzzySets = inferFuzzSets;
+		return inferFuzzSets;
 	}
 	
 	private HashMap<String, FuzzyElementDouble> defuzzifyCOA() {
@@ -93,20 +96,16 @@ public class MamdaniInferenceMechanism {
 			throw new RuntimeException("runInference was not executed.");
 		}
 		defuzzifiedElements = new HashMap<>();
-		Double u_numerator = 0D;
-		Double u_denominator = 0D;
 		for (String key : inferedFuzzySets.keySet()) {
 			FuzzySetRealsLinearContinuous set = inferedFuzzySets.get(key);
 			if (set.hasOnlyZeroMemberships()) {
 				break;
 			}
-			List<FuzzyElementDouble> l = set.getElements();
-			for (FuzzyElementDouble el : l) {
-				u_numerator += el.getElement() * el.getMembershipDegree().getValue();
-				u_denominator += el.getMembershipDegree().getValue();
+			Double u = set.centerOfArea();
+			FuzzyElementDouble fuzzyElementDouble = new FuzzyElementDouble(u, set.mu_c(u).getValue());
+			if (!fuzzyElementDouble.getMembershipDegree().equals(FuzzyValue.FV_0)) {
+				defuzzifiedElements.put(key, new FuzzyElementDouble(fuzzyElementDouble.getElement(), set.mu_c(fuzzyElementDouble.getElement()).getValue()));
 			}
-			FuzzyElementDouble fuzzyElementDouble = new FuzzyElementDouble(u_numerator/u_denominator, 0D);
-			defuzzifiedElements.put(key, new FuzzyElementDouble(u_numerator/u_denominator, set.mu_c(fuzzyElementDouble.getElement()).getValue())); // FIXME someday, move rounding
 		}
 		return defuzzifiedElements;
 		
@@ -114,11 +113,12 @@ public class MamdaniInferenceMechanism {
 	
 	public HashMap<String, String> resultsInterpretation() {
 		this.defuzzifiedElements = defuzzifyCOA();
-		if (defuzzifiedElements.isEmpty()) {
-			throw new RuntimeException("No results are present.");
-		}
 		HashMap<String, String> interpretation = new HashMap<>();
-		for (String key: inferedFuzzySets.keySet()) {
+		if (defuzzifiedElements.isEmpty()) {
+			interpretation.put("nothing", "no results");
+			return interpretation;
+		}
+		for (String key: defuzzifiedElements.keySet()) {
 			Set<String> flvValues = fuzzyLinguisticVariables.get(key).getM_x().keySet();
 			for (String flvKey : flvValues) {
 				List<FuzzyElementDouble> l = fuzzyLinguisticVariables.get(key).getM_x().get(flvKey).getElements();

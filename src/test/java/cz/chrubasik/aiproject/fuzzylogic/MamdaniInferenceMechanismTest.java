@@ -31,7 +31,8 @@ class MamdaniInferenceMechanismTest {
 		FuzzyLinguisticVariable spokojenost_zakaznika = new FuzzyLinguisticVariable("spokojenost_zakaznika", m_x_2);
 		
 		Rule rule1 = Rule.builder()
-				.antecedent("teplota_vody is studena_voda", "teplota_vody is ledova_voda")
+				.antecedent("teplota_vody is studena_voda")
+				.antecedent("teplota_vody is ledova_voda")
 				.operatorType(OperatorType.OR)
 				.consequent("spokojenost_zakaznika is nespokojeny_zakaznik")
 				.build();
@@ -66,8 +67,7 @@ class MamdaniInferenceMechanismTest {
 				.addMeasurement("teplota_vody", 20D);
 		
 		mamdaniInferenceMechanism.runInference();
-		assertEquals(mamdaniInferenceMechanism.resultsInterpretation().get("spokojenost_zakaznika"), "indiferentni_zakaznik");
-		
+		assertEquals("indiferentni_zakaznik", mamdaniInferenceMechanism.resultsInterpretation().get("spokojenost_zakaznika"));
 		
 		
 	}
