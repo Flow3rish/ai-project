@@ -88,6 +88,12 @@ public final class FuzzySetRealsLinearContinuous implements FuzzySet<FuzzyElemen
 		return new ArrayList<>(elements).stream().sorted(Comparator.comparing(FuzzyElementDouble::getElement)).collect(Collectors.toList());
 	}
 	
+	
+	public boolean hasOnlyZeroMemberships() {
+		List<FuzzyElementDouble> l = this.getElements();
+		return l.stream().filter(el -> !el.getMembershipDegree().equals(FuzzyValue.FV_0)).collect(Collectors.toList()).isEmpty();
+	}
+	
 
 	private void ceiledAddToSet(Set<FuzzyElementDouble> set, FuzzyElementDouble el, FuzzyValue ceiling) {
 		if (el.getMembershipDegree().compareTo(ceiling) <= 0) {
