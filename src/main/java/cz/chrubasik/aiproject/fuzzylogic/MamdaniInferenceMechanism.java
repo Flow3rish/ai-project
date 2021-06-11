@@ -28,16 +28,19 @@ public class MamdaniInferenceMechanism {
 	private HashMap<String, FuzzySetRealsLinearContinuous> inferedFuzzySets = null;
 	private HashMap<String, FuzzyElementDouble> defuzzifiedElements; // fuzzy value can be omitted
 	
-	public void addMeasurement(String lingVarName, Double measurement) {
+	public MamdaniInferenceMechanism addMeasurement(String lingVarName, Double measurement) {
 		measurements.put(lingVarName, measurement);
+		return this;
 	}
 	
-	public void addRule(Rule rule) {
+	public MamdaniInferenceMechanism addRule(Rule rule) {
 		this.rules.add(rule);
+		return this;
 	}
 	
-	public void addLinguisticVariable(FuzzyLinguisticVariable fuzzyLinguisticVariable) {
+	public MamdaniInferenceMechanism addLinguisticVariable(FuzzyLinguisticVariable fuzzyLinguisticVariable) {
 		this.fuzzyLinguisticVariables.put(fuzzyLinguisticVariable.getName(), fuzzyLinguisticVariable);
+		return this;
 	}
 
 
