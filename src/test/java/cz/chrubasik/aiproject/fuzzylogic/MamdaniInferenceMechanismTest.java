@@ -67,6 +67,7 @@ class MamdaniInferenceMechanismTest {
 		
 		mamdaniInferenceMechanism.runInference();
 		assertEquals(12D, mamdaniInferenceMechanism.defuzzifyCOA().get("spokojenost_zakaznika").getElement());
+		assertEquals(mamdaniInferenceMechanism.resultsInterpretation().get("spokojenost_zakaznika"), "indiferentni_zakaznik");
 		
 		
 		

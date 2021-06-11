@@ -107,4 +107,23 @@ public class MamdaniInferenceMechanism {
 		
 	}
 	
+	public HashMap<String, String> resultsInterpretation() {
+		if (defuzzifiedElements.isEmpty()) {
+			throw new RuntimeException("No results are present.");
+		}
+		HashMap<String, String> interpretation = new HashMap<>();
+		for (String key: inferedFuzzySets.keySet()) {
+			Set<String> flvValues = fuzzyLinguisticVariables.get(key).getM_x().keySet();
+			for (String flvKey : flvValues) {
+				List<FuzzyElementDouble> l = fuzzyLinguisticVariables.get(key).getM_x().get(flvKey).getElements();
+				if (defuzzifiedElements.get(key).getElement().compareTo(l.get(0).getElement()) >= 0 && defuzzifiedElements.get(key).getElement().compareTo(l.get(l.size() - 1).getElement()) <= 0) {
+					// defuzzified element is in this language value
+					interpretation.put(key, flvKey);
+					break; // multiple puts are not possible for this case
+				}
+			}
+		}
+		return interpretation;
+	}
+	
 }
