@@ -7,6 +7,7 @@ import cz.chrubasik.aiproject.fuzzysets.FuzzyElementDouble;
 import cz.chrubasik.aiproject.fuzzysets.FuzzySetRealsLinearContinuous;
 import cz.chrubasik.aiproject.fuzzysets.FuzzyValue;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
 /*
@@ -51,4 +52,31 @@ public final class FuzzyLinguisticVariable {
 	public FuzzyValue evaluateMeasurementOnFuzzySet(Double x, String f_x) {
 		return m_x.get(f_x).mu_c(x);
 	}
+
+	
+	
+	@NoArgsConstructor
+	public static class FuzzyLinguisticVariableBuilder {
+		private String name;
+		private HashMap<String, FuzzySetRealsLinearContinuous> m_x = new HashMap<>();
+		
+		public FuzzyLinguisticVariableBuilder name(String name) {
+			this.name = name;
+			return this;
+		}
+		
+		public FuzzyLinguisticVariableBuilder addLinguisticValue(String name, FuzzySetRealsLinearContinuous fuzzyNumber) {
+			m_x.put(name, fuzzyNumber);
+			return this;
+		}
+		
+		public FuzzyLinguisticVariable build() {
+			return new FuzzyLinguisticVariable(this.name, this.m_x);
+		}
+	}
+	
+	public static FuzzyLinguisticVariableBuilder builder() {
+		return new FuzzyLinguisticVariableBuilder();
+	}
+	
 }
