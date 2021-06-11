@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
 @Value
@@ -15,19 +17,17 @@ public class Rule {
 	private Statement consequent;
 	
 	
-	enum OperatorType {
+	public enum OperatorType {
 		OR,
 		AND
 	}
-	
+
+	@NoArgsConstructor
 	public static class RuleBuilder {
 		
 		private Set<Statement> antecedent;
 		private OperatorType operatorType;
 		private Statement consequent;
-		
-		public RuleBuilder() {}
-		
 		
 
 		public Rule build() {
