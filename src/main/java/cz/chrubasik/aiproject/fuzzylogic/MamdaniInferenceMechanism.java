@@ -50,7 +50,12 @@ public class MamdaniInferenceMechanism {
 	private FuzzySetRealsLinearContinuous evaluateRule(Rule rule, HashMap<String, Double> measurements) {
 		List<FuzzyValue> antecedents = rule.getAntecedent().stream().map(el -> {
 			FuzzyLinguisticVariable flv = fuzzyLinguisticVariables.get(el.getSubject());
-			return flv.evaluateMeasurementOnFuzzySet(measurements.get(el.getSubject()), el.getPredicate());
+			Double measurement = measurements.get(el.getSubject());
+			if (measurement == null) {
+				return FuzzyValue.FV_0;
+			} else {
+				return flv.evaluateMeasurementOnFuzzySet(measurement, el.getPredicate());
+			}
 		}
 			).collect(Collectors.toList());
 		FuzzyValue antecedentValue = rule.getOperatorType().equals(OperatorType.OR) ? 
