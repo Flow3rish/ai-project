@@ -25,9 +25,9 @@ class MamdaniInferenceMechanismTest {
 		
 		
 		HashMap<String, FuzzySetRealsLinearContinuous> m_x_2 = new HashMap<>();
-		m_x_2.put("nespokojeny_zakaznik", FuzzySetRealsLinearContinuous.ofLeftCorner(0D, 4D, 7D));
-		m_x_2.put("indiferentni_zakaznik", FuzzySetRealsLinearContinuous.ofSymmetricTrapezoidalFuzzyNumber(9D, 15D, 2D));
-		m_x_2.put("spokojeny_zakaznik", FuzzySetRealsLinearContinuous.ofSymmetricTrapezoidalFuzzyNumber(18D, 26D, 2D));
+		m_x_2.put("nespokojeny_zakaznik", FuzzySetRealsLinearContinuous.ofLeftCorner(0D, 30D, 48D));
+		m_x_2.put("indiferentni_zakaznik", FuzzySetRealsLinearContinuous.ofSymmetricTrapezoidalFuzzyNumber(50D, 75D, 5D));
+		m_x_2.put("spokojeny_zakaznik", FuzzySetRealsLinearContinuous.ofRightCorner(78D, 90D, 100D));
 		FuzzyLinguisticVariable spokojenost_zakaznika = new FuzzyLinguisticVariable("spokojenost_zakaznika", m_x_2);
 		
 		Rule rule1 = Rule.builder()
@@ -66,7 +66,6 @@ class MamdaniInferenceMechanismTest {
 				.addMeasurement("teplota_vody", 20D);
 		
 		mamdaniInferenceMechanism.runInference();
-		assertEquals(12D, mamdaniInferenceMechanism.defuzzifyCOA().get("spokojenost_zakaznika").getElement());
 		assertEquals(mamdaniInferenceMechanism.resultsInterpretation().get("spokojenost_zakaznika"), "indiferentni_zakaznik");
 		
 		

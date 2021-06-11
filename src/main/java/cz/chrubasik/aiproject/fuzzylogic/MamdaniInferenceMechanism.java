@@ -80,13 +80,15 @@ public class MamdaniInferenceMechanism {
 		HashMap<String, FuzzySetRealsLinearContinuous> inferedFuzzySets = new HashMap<>();
 		outputSets.keySet().forEach(key -> {
 			FuzzySetRealsLinearContinuous fuzzySetTemp = outputSets.get(key).stream().reduce(new FuzzySetRealsLinearContinuous(new HashSet<>()), (a, b) -> (FuzzySetRealsLinearContinuous) a.union(b));
-			inferedFuzzySets.put(key, fuzzySetTemp);
+			if (!fuzzySetTemp.hasOnlyZeroMemberships()) {
+				inferedFuzzySets.put(key, fuzzySetTemp);
+			}
 		});
 		this.inferedFuzzySets = inferedFuzzySets;
 		return inferedFuzzySets;
 	}
 	
-	public HashMap<String, FuzzyElementDouble> defuzzifyCOA() {
+	private HashMap<String, FuzzyElementDouble> defuzzifyCOA() {
 		if (inferedFuzzySets == null) {
 			throw new RuntimeException("runInference was not executed.");
 		}
@@ -95,6 +97,9 @@ public class MamdaniInferenceMechanism {
 		Double u_denominator = 0D;
 		for (String key : inferedFuzzySets.keySet()) {
 			FuzzySetRealsLinearContinuous set = inferedFuzzySets.get(key);
+			if (set.hasOnlyZeroMemberships()) {
+				break;
+			}
 			List<FuzzyElementDouble> l = set.getElements();
 			for (FuzzyElementDouble el : l) {
 				u_numerator += el.getElement() * el.getMembershipDegree().getValue();
@@ -108,6 +113,7 @@ public class MamdaniInferenceMechanism {
 	}
 	
 	public HashMap<String, String> resultsInterpretation() {
+		this.defuzzifiedElements = defuzzifyCOA();
 		if (defuzzifiedElements.isEmpty()) {
 			throw new RuntimeException("No results are present.");
 		}
@@ -125,5 +131,6 @@ public class MamdaniInferenceMechanism {
 		}
 		return interpretation;
 	}
+
 	
 }
